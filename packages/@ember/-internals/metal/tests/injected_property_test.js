@@ -1,26 +1,31 @@
 import { setOwner } from '@ember/-internals/owner';
-import { defineProperty, get, isClassicDecorator, set, inject } from '..';
+import { defineProperty, get, set, inject } from '..';
 import { moduleFor, AbstractTestCase } from 'internal-test-helpers';
 
 moduleFor(
   'inject',
   class extends AbstractTestCase {
     ['@test injected properties should be descriptors'](assert) {
-      assert.ok(isClassicDecorator(inject('type')));
+      assert.ok(typeof inject('type') === 'function');
     }
 
     ['@test injected properties should be overridable'](assert) {
-      let obj = {};
-      defineProperty(obj, 'foo', inject('type'));
+      class TestClass {
+        @inject('type') foo;
+      }
 
-      set(obj, 'foo', 'bar');
+      let obj = new TestClass();
+      obj.foo = 'bar';
 
-      assert.equal(get(obj, 'foo'), 'bar', 'should return the overridden value');
+      assert.equal(obj.foo, 'bar', 'should return the overridden value');
     }
 
     ['@test getting on an object without an owner or container should fail assertion']() {
-      let obj = {};
-      defineProperty(obj, 'foo', inject('type', 'name'));
+      class TestClass {
+        @inject('type', 'name') foo;
+      }
+
+      let obj = new TestClass();
 
       expectAssertion(function () {
         get(obj, 'foo');
@@ -28,16 +33,17 @@ moduleFor(
     }
 
     ['@test getting on an object without an owner but with a container should not fail'](assert) {
-      let obj = {
-        container: {
-          lookup(key) {
-            assert.ok(true, 'should call container.lookup');
-            return key;
-          },
+      class TestClass {
+        @inject('type', 'name') foo;
+      }
+
+      let obj = new TestClass();
+      obj.container = {
+        lookup(key) {
+          assert.ok(true, 'should call container.lookup');
+          return key;
         },
       };
-
-      defineProperty(obj, 'foo', inject('type', 'name'));
 
       assert.equal(get(obj, 'foo'), 'type:name', 'should return the value of container.lookup');
     }
@@ -45,7 +51,11 @@ moduleFor(
     ['@test getting should return a lookup on the container'](assert) {
       assert.expect(2);
 
-      let obj = {};
+      class TestClass {
+        @inject('type', 'name') foo;
+      }
+
+      let obj = new TestClass();
 
       setOwner(obj, {
         lookup(key) {
@@ -54,21 +64,21 @@ moduleFor(
         },
       });
 
-      defineProperty(obj, 'foo', inject('type', 'name'));
-
       assert.equal(get(obj, 'foo'), 'type:name', 'should return the value of container.lookup');
     }
 
     ['@test omitting the lookup name should default to the property name'](assert) {
-      let obj = {};
+      class TestClass {
+        @inject('type') foo;
+      }
+
+      let obj = new TestClass();
 
       setOwner(obj, {
         lookup(key) {
           return key;
         },
       });
-
-      defineProperty(obj, 'foo', inject('type'));
 
       assert.equal(get(obj, 'foo'), 'type:foo', 'should lookup the type using the property name');
     }
