@@ -22,6 +22,7 @@ export default {
       {
         runEarly: true,
         runtime: { import: 'decorator-transforms/runtime' },
+        legacy: false,
       },
     ],
     [
