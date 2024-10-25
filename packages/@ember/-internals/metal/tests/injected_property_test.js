@@ -1,5 +1,5 @@
 import { setOwner } from '@ember/-internals/owner';
-import { defineProperty, get, set, inject } from '..';
+import { get, inject } from '..';
 import { moduleFor, AbstractTestCase } from 'internal-test-helpers';
 
 moduleFor(
